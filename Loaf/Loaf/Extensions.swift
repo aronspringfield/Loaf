@@ -6,18 +6,7 @@
 //  Copyright © 2019 Mat Schmid. All rights reserved.
 //
 
-import Foundation
-
-extension UIViewController {
-    func presentToast(_ smartToastViewController: LoafViewController) {
-        smartToastViewController.transDelegate = Manager(loaf: smartToastViewController.loaf, size: smartToastViewController.preferredContentSize)
-        smartToastViewController.transitioningDelegate = smartToastViewController.transDelegate
-        smartToastViewController.modalPresentationStyle = .custom
-        smartToastViewController.view.clipsToBounds = true
-        smartToastViewController.view.layer.cornerRadius = 6
-        present(smartToastViewController, animated: true)
-    }
-}
+import UIKit
 
 extension String {
     func heightWithConstrainedWidth(width: CGFloat, font: UIFont) -> CGFloat {

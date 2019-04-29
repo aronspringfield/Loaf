@@ -8,7 +8,8 @@
 
 import UIKit
 
-final class Manager: NSObject, UIViewControllerTransitioningDelegate {
+final class TransitioningDelegate: NSObject, UIViewControllerTransitioningDelegate {
+
     private let loaf: Loaf
     private let size: CGSize
     var animator: Animator
@@ -16,7 +17,7 @@ final class Manager: NSObject, UIViewControllerTransitioningDelegate {
     init(loaf: Loaf, size: CGSize) {
         self.loaf = loaf
         self.size = size
-        self.animator = Animator(duration: 0.4, loaf: loaf, size: size)
+        self.animator = Animator(duration: 0.3, loaf: loaf, size: size)
     }
     
     func presentationController(forPresented presented: UIViewController, presenting: UIViewController?, source: UIViewController) -> UIPresentationController? {

@@ -128,35 +128,53 @@ final public class Loaf {
     var presentingDirection: Direction
     var dismissingDirection: Direction
     var completionHandler: ((Bool) -> Void)? = nil
-    weak var sender: UIViewController?
     
     // MARK: - Public methods
     public init(_ message: String,
+                duration: Duration = .average,
                 state: State = .info,
                 location: Location = .bottom,
                 presentingDirection: Direction = .vertical,
                 dismissingDirection: Direction = .vertical,
-                sender: UIViewController) {
+                completionHandler: ((Bool) -> Void)? = nil) {
         self.message = message
+        self.duration = duration
         self.state = state
         self.location = location
         self.presentingDirection = presentingDirection
         self.dismissingDirection = dismissingDirection
-        self.sender = sender
-    }
-    
-    /// Show the loaf for a specified duration. (Default is `.average`)
-    ///
-    /// - Parameter duration: Length the loaf will be presented
-    public func show(_ duration: Duration = .average, completionHandler: ((Bool) -> Void)? = nil) {
-        self.duration = duration
         self.completionHandler = completionHandler
-        LoafManager.shared.queueAndPresent(self)
+    }
+
+    public static func show(_ message: String,
+                     duration: Duration = .average,
+                     state: State = .info,
+                     location: Location = .bottom,
+                     presentingDirection: Direction = .vertical,
+                     dismissingDirection: Direction = .vertical,
+                     completionHandler: ((Bool) -> Void)? = nil) {
+        let loaf = Loaf(message, duration: duration,
+                        state: state,
+                        location: location,
+                        presentingDirection: presentingDirection,
+                        dismissingDirection: dismissingDirection,
+                        completionHandler: completionHandler)
+        LoafManager.shared.queueAndPresent(loaf)
     }
 }
 
 final fileprivate class LoafManager: LoafDelegate {
     static let shared = LoafManager()
+
+    private lazy var window: Window = {
+        let window = Window(frame: UIScreen.main.bounds)
+        window.windowLevel = UIWindow.Level.alert - 1
+
+        let previousKeyWindow = UIApplication.shared.keyWindow
+        window.makeKeyAndVisible()
+        previousKeyWindow?.makeKey()
+        return window
+    }()
     
     fileprivate var queue = Queue<Loaf>()
     fileprivate var isPresenting = false
@@ -172,11 +190,12 @@ final fileprivate class LoafManager: LoafDelegate {
     }
     
     fileprivate func presentIfPossible() {
-        guard isPresenting == false, let loaf = queue.dequeue(), let sender = loaf.sender else { return }
+        guard isPresenting == false, let loaf = queue.dequeue() else { return }
         isPresenting = true
         let loafVC = LoafViewController(loaf)
         loafVC.delegate = self
-        sender.presentToast(loafVC)
+
+        window.viewController.present(loafVC, animated: true)
     }
 }
 
@@ -186,17 +205,16 @@ protocol LoafDelegate: AnyObject {
 
 final class LoafViewController: UIViewController {
     var loaf: Loaf
-    
+
+    var loafTransitioningDelegate: TransitioningDelegate?
     let label = UILabel()
     let imageView = UIImageView(image: nil)
     var font = UIFont.systemFont(ofSize: 14, weight: .medium)
     var textAlignment: NSTextAlignment = .left
-    var transDelegate: UIViewControllerTransitioningDelegate
     weak var delegate: LoafDelegate?
     
     init(_ toast: Loaf) {
         self.loaf = toast
-        self.transDelegate = Manager(loaf: toast, size: .zero)
         super.init(nibName: nil, bundle: nil)
         
         if case let Loaf.State.custom(style) = loaf.state {
@@ -206,6 +224,12 @@ final class LoafViewController: UIViewController {
         
         let height = max(toast.message.heightWithConstrainedWidth(width: 240, font: font) + 12, 40)
         preferredContentSize = CGSize(width: 280, height: height)
+
+        loafTransitioningDelegate = TransitioningDelegate(loaf: loaf, size: preferredContentSize)
+        transitioningDelegate = loafTransitioningDelegate
+        modalPresentationStyle = .custom
+        view.clipsToBounds = true
+        view.layer.cornerRadius = 6
     }
     
     required init?(coder aDecoder: NSCoder) {
@@ -266,6 +290,7 @@ final class LoafViewController: UIViewController {
     }
     
     @objc private func handleTap() {
+        NSLog("TAP")
         dismiss(animated: true) { [weak self] in
             self?.delegate?.loafDidDismiss()
             self?.loaf.completionHandler?(true)
