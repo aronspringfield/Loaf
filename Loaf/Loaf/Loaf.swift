@@ -290,7 +290,6 @@ final class LoafViewController: UIViewController {
     }
     
     @objc private func handleTap() {
-        NSLog("TAP")
         dismiss(animated: true) { [weak self] in
             self?.delegate?.loafDidDismiss()
             self?.loaf.completionHandler?(true)
