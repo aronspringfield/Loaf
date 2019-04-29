@@ -73,9 +73,22 @@ final public class Loaf {
     ///
     /// - top: Top of the display
     /// - bottom: Bottom of the display
-    public enum Location {
+    public enum Location: Equatable {
         case top
         case bottom
+        case custom(CGFloat)
+
+        public static func ==(lhs: Location, rhs: Location) -> Bool {
+            switch (lhs, rhs) {
+            case (.top, .top),
+                 (.bottom, .bottom):
+                return true
+            case let (.custom(a), .custom(b)):
+                return a == b
+            default:
+                return false
+            }
+        }
     }
     
     /// Defines either the presenting or dismissing direction of loaf. (Default is `.vertical`)

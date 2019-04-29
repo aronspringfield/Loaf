@@ -39,6 +39,8 @@ final class Controller: UIPresentationController {
             yPosition = containerView.frame.height - size.height - 40
         case .top:
             yPosition = 50
+        case .custom(let yPoint):
+            yPosition = yPoint
         }
         
         containerView.frame.origin = CGPoint(
@@ -61,7 +63,7 @@ final class Controller: UIPresentationController {
         switch loaf.location {
         case .bottom:
             yPosition = containerView.bounds.height - containerSize.height
-        case .top:
+        case .top, .custom( _):
             yPosition = 0
         }
         
