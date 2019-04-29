@@ -16,7 +16,7 @@ Pod::Spec.new do |s|
   #
 
   s.name         = "Loaf"
-  s.version      = "0.3.0"
+  s.version      = "0.4.0"
   s.summary      = "A Swifty Framework for Easy iOS Toasts."
 
   # This description is used to generate tags and improve search results.
@@ -78,7 +78,7 @@ Pod::Spec.new do |s|
   #  Supports git, hg, bzr, svn and HTTP.
   #
 
-  s.source       = { :git => "https://github.com/schmidyy/Loaf.git", :tag => "#{s.version}" }
+  s.source       = { :git => "https://github.com/aronspringfield/Loaf.git", :tag => s.version.to_s }
 
 
   # ――― Source Code ―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――― #
