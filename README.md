@@ -18,9 +18,9 @@ ____
 
 ## Usage
 
-From any view controller, a Loaf can be presented by calling:
+From anywhere, a Loaf can be presented by calling:
 ```swift
-Loaf("Message goes here", sender: self).show()
+Loaf.show("Message goes here")
 ```
 Which will result in:
 
