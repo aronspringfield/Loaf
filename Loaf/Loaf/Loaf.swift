@@ -100,6 +100,7 @@ final public class Loaf {
         case left
         case right
         case vertical
+        case `static`
     }
     
     /// Defines the duration of the loaf presentation. (Default is .`avergae`)
