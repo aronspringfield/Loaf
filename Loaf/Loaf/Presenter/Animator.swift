@@ -108,14 +108,14 @@ final class Animator: NSObject {
         UIView.animate(withDuration: 0.3, delay: 0, usingSpringWithDamping: 0.8, initialSpringVelocity: 0.65, options: [], animations: {
             loafView.frame = endingFrame
             loafView.alpha = 1
-        }, completion: nil)
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + loafView.loaf.duration) {
-            if self.animationState == .presenting {
-                self.animationState = .presented
-                self.animateOut(loafView: loafView)
+        }, completion: { (finished) in
+            DispatchQueue.main.asyncAfter(deadline: .now() + loafView.loaf.duration) {
+                if self.animationState == .presenting {
+                    self.animationState = .presented
+                    self.animateOut(loafView: loafView)
+                }
             }
-        }
+        })
     }
 
     private func animateOut(loafView: LoafView) {
