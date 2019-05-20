@@ -103,29 +103,6 @@ final public class Loaf {
         case `static`
     }
     
-    /// Defines the duration of the loaf presentation. (Default is .`avergae`)
-    ///
-    /// - short: 2 seconds
-    /// - average: 4 seconds
-    /// - long: 8 seconds
-    /// - custom: A custom duration (usage: `.custom(5.0)`)
-    public enum Duration {
-        case short
-        case average
-        case long
-        case custom(TimeInterval)
-        
-        var length: TimeInterval {
-            switch self {
-            case .short:   return 2.0
-            case .average: return 4.0
-            case .long:    return 8.0
-            case .custom(let timeInterval):
-                return timeInterval
-            }
-        }
-    }
-    
     /// Icons used in basic states
     public enum Icon {
         public static let success = Icons.imageOfSuccess().withRenderingMode(.alwaysTemplate)
@@ -138,14 +115,14 @@ final public class Loaf {
     var message: String
     var state: State
     var location: Location
-    var duration: Duration = .average
+    var duration: TimeInterval
     var presentingDirection: Direction
     var dismissingDirection: Direction
     var completionHandler: ((Bool) -> Void)? = nil
     
     // MARK: - Public methods
     public init(_ message: String,
-                duration: Duration = .average,
+                duration: TimeInterval = 3,
                 state: State = .info,
                 location: Location = .bottom,
                 presentingDirection: Direction = .vertical,
@@ -161,7 +138,7 @@ final public class Loaf {
     }
 
     public static func show(_ message: String,
-                     duration: Duration = .average,
+                     duration: TimeInterval = 3,
                      state: State = .info,
                      location: Location = .bottom,
                      presentingDirection: Direction = .vertical,
@@ -173,85 +150,37 @@ final public class Loaf {
                         presentingDirection: presentingDirection,
                         dismissingDirection: dismissingDirection,
                         completionHandler: completionHandler)
-        LoafManager.shared.queueAndPresent(loaf)
+        let loafView = LoafView(loaf)
+        Animator.shared.present(loafView: loafView)
     }
 }
 
-final fileprivate class LoafManager: LoafDelegate {
-    static let shared = LoafManager()
-
-    private lazy var window: Window = {
-        let window = Window(frame: UIScreen.main.bounds)
-        window.windowLevel = UIWindow.Level.alert - 1
-
-        let previousKeyWindow = UIApplication.shared.keyWindow
-        window.makeKeyAndVisible()
-        previousKeyWindow?.makeKey()
-        return window
-    }()
-    
-    fileprivate var queue = Queue<Loaf>()
-    fileprivate var isPresenting = false
-    
-    fileprivate func queueAndPresent(_ loaf: Loaf) {
-        queue.enqueue(loaf)
-        presentIfPossible()
-    }
-    
-    func loafDidDismiss() {
-        isPresenting = false
-        presentIfPossible()
-    }
-    
-    fileprivate func presentIfPossible() {
-        guard isPresenting == false, let loaf = queue.dequeue() else { return }
-        isPresenting = true
-        let loafVC = LoafViewController(loaf)
-        loafVC.delegate = self
-
-        window.viewController.present(loafVC, animated: true)
-    }
-}
-
-protocol LoafDelegate: AnyObject {
-    func loafDidDismiss()
-}
-
-final class LoafViewController: UIViewController {
+final class LoafView: UIView {
     var loaf: Loaf
 
-    var loafTransitioningDelegate: TransitioningDelegate?
     let label = UILabel()
     let imageView = UIImageView(image: nil)
     var font = UIFont.systemFont(ofSize: 14, weight: .medium)
     var textAlignment: NSTextAlignment = .left
-    weak var delegate: LoafDelegate?
-    
+
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
     init(_ toast: Loaf) {
         self.loaf = toast
-        super.init(nibName: nil, bundle: nil)
+        let height = max(toast.message.heightWithConstrainedWidth(width: 240, font: font) + 12, 40)
+        let contentSize = CGSize(width: 280, height: height)
+
+        super.init(frame: CGRect(origin: .zero, size: contentSize))
         
         if case let Loaf.State.custom(style) = loaf.state {
             self.font = style.font
             self.textAlignment = style.textAlignment
         }
-        
-        let height = max(toast.message.heightWithConstrainedWidth(width: 240, font: font) + 12, 40)
-        preferredContentSize = CGSize(width: 280, height: height)
 
-        loafTransitioningDelegate = TransitioningDelegate(loaf: loaf, size: preferredContentSize)
-        transitioningDelegate = loafTransitioningDelegate
-        modalPresentationStyle = .custom
-        view.clipsToBounds = true
-        view.layer.cornerRadius = 6
-    }
-    
-    required init?(coder aDecoder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-    override func viewDidLoad() {
-        super.viewDidLoad()
+        clipsToBounds = true
+        layer.cornerRadius = 6
         
         label.text = loaf.message
         label.numberOfLines = 0
@@ -269,23 +198,23 @@ final class LoafViewController: UIViewController {
         switch loaf.state {
         case .success:
             imageView.image = Loaf.Icon.success
-            view.backgroundColor = UIColor(hexString: "#2ecc71")
+            backgroundColor = UIColor(hexString: "#2ecc71")
             constrainWithIconAlignment(.left)
         case .warning:
             imageView.image = Loaf.Icon.warning
-            view.backgroundColor = UIColor(hexString: "##f1c40f")
+            backgroundColor = UIColor(hexString: "##f1c40f")
             constrainWithIconAlignment(.left)
         case .error:
             imageView.image = Loaf.Icon.error
-            view.backgroundColor = UIColor(hexString: "##e74c3c")
+            backgroundColor = UIColor(hexString: "##e74c3c")
             constrainWithIconAlignment(.left)
         case .info:
             imageView.image = Loaf.Icon.info
-            view.backgroundColor = UIColor(hexString: "##34495e")
+            backgroundColor = UIColor(hexString: "##34495e")
             constrainWithIconAlignment(.left)
         case .custom(style: let style):
             imageView.image = style.icon
-            view.backgroundColor = style.backgroundColor
+            backgroundColor = style.backgroundColor
             imageView.tintColor = style.tintColor
             label.textColor = style.textColor
             label.font = style.font
@@ -293,79 +222,52 @@ final class LoafViewController: UIViewController {
         }
         
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleTap))
-        view.addGestureRecognizer(tapGesture)
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + loaf.duration.length, execute: {
-            self.dismiss(animated: true) { [weak self] in
-                self?.delegate?.loafDidDismiss()
-                self?.loaf.completionHandler?(false)
-            }
-        })
+        addGestureRecognizer(tapGesture)
     }
     
     @objc private func handleTap() {
-        dismiss(animated: true) { [weak self] in
-            self?.delegate?.loafDidDismiss()
-            self?.loaf.completionHandler?(true)
-        }
+        Animator.shared.dismiss(loafView: self)
     }
     
     private func constrainWithIconAlignment(_ alignment: Loaf.Style.IconAlignment, showsIcon: Bool = true) {
-        view.addSubview(label)
+        addSubview(label)
         
         if showsIcon {
-            view.addSubview(imageView)
+            addSubview(imageView)
             
             switch alignment {
             case .left:
                 NSLayoutConstraint.activate([
-                    imageView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 10),
-                    imageView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+                    imageView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 10),
+                    imageView.centerYAnchor.constraint(equalTo: centerYAnchor),
                     imageView.heightAnchor.constraint(equalToConstant: 28),
                     imageView.widthAnchor.constraint(equalToConstant: 28),
                     
                     label.leadingAnchor.constraint(equalTo: imageView.trailingAnchor, constant: 10),
-                    label.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -4),
-                    label.topAnchor.constraint(equalTo: view.topAnchor),
-                    label.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+                    label.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -4),
+                    label.topAnchor.constraint(equalTo: topAnchor),
+                    label.bottomAnchor.constraint(equalTo: bottomAnchor)
                 ])
             case .right:
                 NSLayoutConstraint.activate([
-                    imageView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -10),
-                    imageView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+                    imageView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -10),
+                    imageView.centerYAnchor.constraint(equalTo: centerYAnchor),
                     imageView.heightAnchor.constraint(equalToConstant: 28),
                     imageView.widthAnchor.constraint(equalToConstant: 28),
                     
-                    label.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 10),
+                    label.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 10),
                     label.trailingAnchor.constraint(equalTo: imageView.leadingAnchor, constant: -4),
-                    label.topAnchor.constraint(equalTo: view.topAnchor),
-                    label.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+                    label.topAnchor.constraint(equalTo: topAnchor),
+                    label.bottomAnchor.constraint(equalTo: bottomAnchor)
                 ])
             }
         } else {
             NSLayoutConstraint.activate([
-                label.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 10),
-                label.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -10),
-                label.topAnchor.constraint(equalTo: view.topAnchor),
-                label.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+                label.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 10),
+                label.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -10),
+                label.topAnchor.constraint(equalTo: topAnchor),
+                label.bottomAnchor.constraint(equalTo: bottomAnchor)
             ])
         }
     }
 }
-
-private struct Queue<T> {
-    fileprivate var array = [T]()
-    
-    mutating func enqueue(_ element: T) {
-        array.append(element)
-    }
-    
-    mutating func dequeue() -> T? {
-        if array.isEmpty {
-            return nil
-        } else {
-            return array.removeFirst()
-        }
-    }
-}
-
