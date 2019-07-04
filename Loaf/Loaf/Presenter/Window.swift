@@ -12,6 +12,7 @@ class Window: UIWindow {
     override init(frame: CGRect) {
         super.init(frame: frame)
         self.rootViewController = UIViewController()
+        self.rootViewController?.view.isUserInteractionEnabled = false
     }
 
     required init?(coder aDecoder: NSCoder) {
