@@ -43,9 +43,7 @@ final class Animator: NSObject {
     }
 
     func dismiss(loafView: LoafView) {
-        if window.subviews.first == loafView {
-            animateOut(loafView: loafView)
-        }
+        animateOut(loafView: loafView)
     }
 
     private func presentNext() {
