@@ -20,10 +20,12 @@ class Window: UIWindow {
 
     override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
         for view in subviews {
-            let convertedPoint = self.convert(point, to: view)
+            if view != rootViewController?.view {
+                let convertedPoint = self.convert(point, to: view)
 
-            if view.bounds.contains(convertedPoint) {
-                return view
+                if view.bounds.contains(convertedPoint) {
+                    return view
+                }
             }
         }
 
