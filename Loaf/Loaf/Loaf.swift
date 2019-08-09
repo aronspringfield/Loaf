@@ -19,9 +19,8 @@ final public class Loaf {
         /// - left: The icon will be on the left of the text
         /// - right: The icon will be on the right of the text
         public enum IconAlignment {
-            case natural
-            case left
-            case right
+            case leading
+            case trailing
         }
         
         /// The background color of the loaf.
@@ -44,7 +43,7 @@ final public class Loaf {
         /// The position of the icon
         let iconAlignment: IconAlignment
         
-        public init(backgroundColor: UIColor, textColor: UIColor = .white, tintColor: UIColor = .white, font: UIFont = UIFont.systemFont(ofSize: 14, weight: .medium), icon: UIImage? = Icon.info, textAlignment: NSTextAlignment = .natural, iconAlignment: IconAlignment = .natural) {
+        public init(backgroundColor: UIColor, textColor: UIColor = .white, tintColor: UIColor = .white, font: UIFont = UIFont.systemFont(ofSize: 14, weight: .medium), icon: UIImage? = Icon.info, textAlignment: NSTextAlignment = .natural, iconAlignment: IconAlignment = .leading) {
             self.backgroundColor = backgroundColor
             self.textColor = textColor
             self.tintColor = tintColor
@@ -200,19 +199,19 @@ final class LoafView: UIView {
         case .success:
             imageView.image = Loaf.Icon.success
             backgroundColor = UIColor(hexString: "#2ecc71")
-            constrainWithIconAlignment(.natural)
+            constrainWithIconAlignment(.leading)
         case .warning:
             imageView.image = Loaf.Icon.warning
             backgroundColor = UIColor(hexString: "##f1c40f")
-            constrainWithIconAlignment(.natural)
+            constrainWithIconAlignment(.leading)
         case .error:
             imageView.image = Loaf.Icon.error
             backgroundColor = UIColor(hexString: "##e74c3c")
-            constrainWithIconAlignment(.natural)
+            constrainWithIconAlignment(.leading)
         case .info:
             imageView.image = Loaf.Icon.info
             backgroundColor = UIColor(hexString: "##34495e")
-            constrainWithIconAlignment(.natural)
+            constrainWithIconAlignment(.leading)
         case .custom(style: let style):
             imageView.image = style.icon
             backgroundColor = style.backgroundColor
@@ -235,22 +234,9 @@ final class LoafView: UIView {
         
         if showsIcon {
             addSubview(imageView)
-
-            let finalAlignment: Loaf.Style.IconAlignment
-            switch alignment {
-            case .left, .right:
-                finalAlignment = alignment
-            case .natural:
-                let isRtl = UIApplication.shared.userInterfaceLayoutDirection == .rightToLeft
-                if isRtl {
-                    finalAlignment = .right
-                } else {
-                    finalAlignment = .left
-                }
-            }
             
-            switch finalAlignment {
-            case .left:
+            switch alignment {
+            case .leading:
                 NSLayoutConstraint.activate([
                     imageView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 10),
                     imageView.centerYAnchor.constraint(equalTo: centerYAnchor),
@@ -262,7 +248,7 @@ final class LoafView: UIView {
                     label.topAnchor.constraint(equalTo: topAnchor),
                     label.bottomAnchor.constraint(equalTo: bottomAnchor)
                 ])
-            case .right:
+            case .trailing:
                 NSLayoutConstraint.activate([
                     imageView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -10),
                     imageView.centerYAnchor.constraint(equalTo: centerYAnchor),
