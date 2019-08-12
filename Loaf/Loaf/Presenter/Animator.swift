@@ -30,8 +30,8 @@ final class Animator: NSObject {
     }()
 
     private var animationState: LoafAnimationState = .none
-    private var queue = [LoafView]()
-    private var isPresenting: Bool {
+    private(set) var queue = [LoafView]()
+    var isPresenting: Bool {
         get {
             return window.subviews.count > 0
         }

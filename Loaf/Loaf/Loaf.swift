@@ -153,6 +153,10 @@ final public class Loaf {
         let loafView = LoafView(loaf)
         Animator.shared.present(loafView: loafView)
     }
+
+    public static func isShowing() -> Bool {
+        return Animator.shared.queue.count > 0 || Animator.shared.isPresenting
+    }
 }
 
 final class LoafView: UIView {
