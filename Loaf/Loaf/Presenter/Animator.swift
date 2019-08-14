@@ -33,7 +33,7 @@ final class Animator: NSObject {
     private(set) var queue = [LoafView]()
     var isPresenting: Bool {
         get {
-            return window.subviews.count > 0
+            return window.subviews.count > 1
         }
     }
 
