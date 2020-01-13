@@ -31,6 +31,7 @@ final class Animator: NSObject {
 
     private var animationState: LoafAnimationState = .none
     private(set) var queue = [LoafView]()
+    private var dismissTimer: Timer?
     var isPresenting: Bool {
         get {
             return window.subviews.count > 1
@@ -107,12 +108,12 @@ final class Animator: NSObject {
             loafView.frame = endingFrame
             loafView.alpha = 1
         }, completion: { (finished) in
-            DispatchQueue.main.asyncAfter(deadline: .now() + loafView.loaf.duration) {
+            self.dismissTimer = Timer.scheduledTimer(withTimeInterval: loafView.loaf.duration, repeats: false, block: { timer in
                 if self.animationState == .presenting {
                     self.animationState = .presented
                     self.animateOut(loafView: loafView)
                 }
-            }
+            })
         })
     }
 
@@ -124,6 +125,8 @@ final class Animator: NSObject {
             return
         }
 
+        dismissTimer?.invalidate()
+        dismissTimer = nil
         animationState = .dismissing
 
         let superviewFrame = window.frame
