@@ -9,6 +9,11 @@
 import UIKit
 
 final public class Loaf {
+
+    public enum Message {
+        case string(String)
+        case attributedString(NSAttributedString)
+    }
     
     // MARK: - Specifiers
     
@@ -112,7 +117,7 @@ final public class Loaf {
     }
     
     // MARK: - Properties
-    var message: String
+    var message: Message
     var state: State
     var location: Location
     var duration: TimeInterval
@@ -121,7 +126,7 @@ final public class Loaf {
     var completionHandler: ((Bool) -> Void)? = nil
     
     // MARK: - Public methods
-    public init(_ message: String,
+    public init(_ message: Message,
                 duration: TimeInterval = 3,
                 state: State = .info,
                 location: Location = .bottom,
@@ -138,6 +143,22 @@ final public class Loaf {
     }
 
     public static func show(_ message: String,
+                     duration: TimeInterval = 3,
+                     state: State = .info,
+                     location: Location = .bottom,
+                     presentingDirection: Direction = .vertical,
+                     dismissingDirection: Direction = .vertical,
+                     completionHandler: ((Bool) -> Void)? = nil) {
+        show(.string(message),
+             duration: duration,
+             state: state,
+             location: location,
+             presentingDirection: presentingDirection,
+             dismissingDirection: dismissingDirection,
+             completionHandler: completionHandler)
+    }
+
+    public static func show(_ message: Message,
                      duration: TimeInterval = 3,
                      state: State = .info,
                      location: Location = .bottom,
@@ -173,7 +194,14 @@ final class LoafView: UIView {
 
     init(_ toast: Loaf) {
         self.loaf = toast
-        let height = max(toast.message.heightWithConstrainedWidth(width: 240, font: font) + 12, 40)
+        var height: CGFloat = 0
+
+        switch loaf.message {
+        case .string(let string):
+            height = max(string.heightWithConstrainedWidth(width: 240, font: font) + 12, 40)
+        case .attributedString(let attrString):
+            height = max(attrString.string.heightWithConstrainedWidth(width: 240, font: font) + 12, 40)
+        }
         let contentSize = CGSize(width: 280, height: height)
 
         super.init(frame: CGRect(origin: .zero, size: contentSize))
@@ -185,8 +213,13 @@ final class LoafView: UIView {
 
         clipsToBounds = true
         layer.cornerRadius = 6
-        
-        label.text = loaf.message
+
+        switch loaf.message {
+        case .string(let string):
+            label.text = string
+        case .attributedString(let attrString):
+            label.attributedText = attrString
+        }
         label.numberOfLines = 0
         label.lineBreakMode = .byWordWrapping
         label.textColor = .white
