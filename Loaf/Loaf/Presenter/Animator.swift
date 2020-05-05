@@ -38,6 +38,11 @@ final class Animator: NSObject {
         }
     }
 
+    func prepare() {
+        // Invoke lazy loading
+        window.frame.origin = .zero
+    }
+
     func present(loafView: LoafView) {
         queue.insert(loafView, at: 0)
         presentNext()

@@ -175,6 +175,10 @@ final public class Loaf {
         Animator.shared.present(loafView: loafView)
     }
 
+    public static func prepare() {
+        Animator.shared.prepare()
+    }
+
     public static func isShowing() -> Bool {
         return Animator.shared.queue.count > 0 || Animator.shared.isPresenting
     }
